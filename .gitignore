@@ -17,4 +17,3 @@ profiles.clj
 *.class
 /.envrc
 profiles.clj
-*.edn

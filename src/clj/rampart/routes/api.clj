@@ -27,7 +27,7 @@
       (api/process
        (query/make-query :project
                          (assoc req
-                                :uri "/api/v2/projects"))))
+                                :uri (clojure.string/replace (:uri req) #"api" "api/v2")))))
     (GET "/projects" req
       (api/process
        (query/make-query :projects

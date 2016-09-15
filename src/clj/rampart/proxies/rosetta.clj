@@ -14,8 +14,8 @@
 
             [summit.utils.core :as utils]))
 
-(def ^:private rosetta-conn-pool
-  (conn-mgr/make-reusable-conn-manager {:timeout 360 :threads 10}))
+;; (def ^:private rosetta-conn-pool
+;;   (conn-mgr/make-reusable-conn-manager {:timeout 360 :threads 10}))
 
 (defn rosetta-proxy [query]
   (let [request (:request query)
@@ -23,12 +23,12 @@
         ;; base-url (:rosetta-url (cprop.source/from-env))
         base-url (-> env :rosetta-url)
         url (proxy/reconstitute-uri base-url request)
-        _ (utils/ppn "url:" url)
+        _ (utils/ppn "url:" url method proxy/debug-options)
         response (client/request
                   (merge
                    {:method method
                     :url url
-                    :connection-manager rosetta-conn-pool
+                    ;; :connection-manager rosetta-conn-pool
                     ;; :as :json
                     ;; :accept :json
                     ;; :x-forwarded-for (-> request :headers :x-forwarded-for)

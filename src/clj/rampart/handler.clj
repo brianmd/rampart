@@ -7,7 +7,7 @@
             [mount.core :as mount]
             [rampart.middleware :as middleware]
 
-            [rampart.routes.api :refer [api-routes]]))
+            [rampart.routes.api :refer [api-routes-v2]]))
 
 (mount/defstate init-app
                 :start ((or (:init defaults) identity))
@@ -17,7 +17,7 @@
   (routes
     (->
         ;; #'home-routes
-        #'api-routes
+        #'api-routes-v2
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats))
     (route/not-found

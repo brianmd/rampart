@@ -1,6 +1,6 @@
 (ns rampart.routes.api
   (:require [rampart.layout :as layout]
-            [compojure.core :refer [defroutes GET]]
+            [compojure.core :refer [defroutes GET context]]
             [ring.util.http-response :as response]
             [clojure.java.io :as io]
 
@@ -8,27 +8,39 @@
             [ring.handler.dump :as dump]
 
             [rampart.process-api :as api]
+            [rampart.web-query :as query]
             ))
 
 (defn dump-page [req]
-  ;; (println req)
   (dump/handle-dump req)
-  ;; {:status 200
-  ;;  ;; :body {:a 3}}
-  ;;  :body {:request req}}
   )
 
-(defroutes api-routes
+(defn- gather-params [req]
+  (merge
+   (:params req)
+   (:filter (:params req))))
+
+(defroutes api-routes-v2
   (GET "/dump*" req (println "\n\n\n-------------\n\n\n") (dump-page req))
-  ;; (GET "/" [req] (println "dump request") (dump-page req))
-  (GET "/" req (println "dump request")
-       (api/process req)
-       ;; {:status 200
-       ;;  :body {:not :okay}
-       ;;  ;; :body (cheshire/generate-string req)
-       ;;  ;; :body (compojure.response/render req)
-       ;;  }
-       )
-  ;; (GET "/" [] (-> (response/ok (-> "docs/docs.md" io/resource slurp))
-  ;;                 (response/header "Content-Type" "text/plain; charset=utf-8")))
-  )
+  (context "/api" []
+    (GET "/projects/:id" req
+      (api/process
+       (query/make-query :project
+                         (assoc req
+                                :uri "/api/v2/projects"))))
+    (GET "/projects" req
+      (api/process
+       (query/make-query :projects
+                         (assoc req
+                                :uri "/api/v2/projects"))))
+
+    (context "/:version-num" []
+      (GET "/projects/:id" req
+        (api/process (query/make-query :project req)))
+
+      (GET "/projects" request
+        (api/process (query/make-query :projects request)))
+
+      (GET "/orders/:id" request
+        (api/process (query/make-query :order request)))
+      )))

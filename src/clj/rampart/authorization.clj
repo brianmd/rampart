@@ -19,12 +19,13 @@
   ([token] (webtoken->customer-id (env :secret) token))
   ([secret token] (:customer_id (jwt/unsign token secret))))
 
-(defn http-request-customer-id
+;; "TODO: if error here, throw 4??"
+(defn request->customer-id
   "found from the webtoken in Authoriation line of header"
-  [secret req]
-  (let [auth (:authorization (:headers req))
-        token (last (str/split auth #" "))]
-    (webtoken->customer-id token)))
+  [req]
+  (when-let [auth (:authorization (:headers req))]
+    (let [token (last (str/split auth #" "))]
+      (webtoken->customer-id token))))
 
 (defn bh-webtoken
   "returns webtoken after logging into bh"

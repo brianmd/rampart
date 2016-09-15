@@ -9,90 +9,62 @@
             [clj-http.client :as client]
             [clj-http.conn-mgr :as conn-mgr]
             [rampart.config :refer [env]]
+
+            [summit.utils.core :as utils]
+            [rampart.authorization :as auth]
+            [rampart.proxies :as proxies]
             ))
 
-(def debug-options
-  {:debug true
-   :debug-body true})
+(defn timenow [] (java.time.LocalDateTime/now))
 
-(def ^:private rosetta-conn-pool
-  (conn-mgr/make-reusable-conn-manager {:timeout 360 :threads 10}))
+(defn- prepare-query [query]
+  (assoc query
+         :query-start-time (timenow)))
 
-(defn reconstitute-uri [base-url request]
-  (let [query-str (if-let [q (:query-str request)]
-                    (str "&" q)
-                    "")
-        ]
-    (str base-url (:uri request) query-str)
-    ))
-
-
-
-
-
-(defn- rosetta-proxy [query]
-  (let [request (:request query)
-        method (:request-method request)
-        ;; base-url (:rosetta-url (cprop.source/from-env))
-        base-url (-> env :rosetta-url)
-        url (reconstitute-uri base-url request)
-        response (client/request
-                  (merge
-                   {:method method
-                    :url url
-                    :connection-manager rosetta-conn-pool
-                    ;; :as :json
-                    ;; :accept :json
-                    :x-forwarded-for (-> request :headers :x-forwarded-for)
-                    :query-params (:query-params request)
-                    :form-params (:form-params request)
-                    }
-                   debug-options
-                   ))
-        ]
-    (assoc query :response response)
-    ))
-
-
-;; (defn rosetta-proxy [query]
-;;   (assoc query :response
-;;          {:status 200
-;;           :body {:a :ok}}))
-
-
-
-
-
-(defn- authorize-request [query]
+(defn- pre-validate [query]
   query)
 
-(defn- parse-query [query]
+(defn- pre-authorize [query]
   query)
 
 (defn- authorize-response [query]
   query)
 
 (defn- proxy-request [query]
-  (rosetta-proxy (:request query)))
+  (proxies/process-proxy query))
 
-(defn- validate-response [query]
+(defn- post-validate [query]
   query)
 
-(defn- authorize-response [query]
+(defn- post-authorize [query]
+  query)
+
+(defn- finalize-query [query]
   query)
 
 (defn- format-response [query]
-  (:response query))
+  (let [response (:response query)]
+    (if response
+      {:status (:status response)
+       :body (:body response)
+       :headers {"Content-Type" "application/json"}
+       }
+      {:status 400
+       :body {:errors ["nil was returned"]}})))
 
-(defn process [request]
+
+
+(defn process [query]
   (->
-   {:request request}  ;; the query
-   authorize-request
-   parse-query
-   authorize-request
+   query
+   utils/ppl
+   prepare-query
+   pre-validate
+   pre-authorize
    proxy-request
-   validate-response
-   authorize-response
+   post-validate
+   post-authorize
+   finalize-query
    format-response))
 
 

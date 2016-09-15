@@ -78,7 +78,7 @@
   )
 ;; (customer-account-subsystems {:id 28})
 
-(defn customer-subsystems [id]
+(defn customer-account-subsystems [id]
   (let [grants (db/get-customer-account-subsystems {:id id})
         accounts (map :account_number grants)]
     (into {} (map #(vector (Integer. %) [:all>]) accounts)))

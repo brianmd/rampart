@@ -25,6 +25,8 @@
   query)
 
 (defn- pre-authorize [query]
+  (println "\n\n\n\n @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ \n\n\n")
+  (println (auth/customer-subsystems 28))
   query)
 
 (defn- authorize-response [query]

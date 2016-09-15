@@ -16,7 +16,7 @@
 (defn- gather-params [req]
   (merge
    (:params req)
-   (:filter (:params req))))
+   (:filter req)))   ;; to accomodate json-api's putting query params into filters.
 
 (defn make-query [query-name request]
   (let [query {:request request

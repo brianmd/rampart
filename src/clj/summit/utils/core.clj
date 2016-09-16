@@ -74,6 +74,13 @@
   [& args]
   (apply log/log-soon args))
 
+(defn ppbl
+  "pprint all but last, returning last arg"
+  [& args]
+  (apply log/log-soon (butlast args))
+  (last args)
+  )
+
 (defn ppd
   "pprint, but when called quickly, drop most calls. Return last arg"
   [& args]

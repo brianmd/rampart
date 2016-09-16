@@ -20,11 +20,15 @@
    (:filter (:params req))))   ;; to accomodate json-api's putting query params into filters.
    ;; (:filter req)))   ;; to accomodate json-api's putting query params into filters.
 
-(defn make-query [query-name request]
+(defn make-query [subsystem query-name request]
   (let [query {:request request
-               :query (assoc (utils/ppl "gather-params:" (gather-params request)) :query-name query-name)
+               :query {:subsystem subsystem
+                       :query-name query-name
+                       :params (gather-params request)
+                       }
                }
-        customer-id (auth/request->customer-id request)]
+        customer-id (auth/request->customer-id request)
+        ]
     (if customer-id
       (assoc query :customer-id customer-id)
       query)))

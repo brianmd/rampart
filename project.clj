@@ -34,6 +34,8 @@
 
                  [cheshire "5.6.3"]
                  [clj-http "2.2.0"]
+                 [slingshot "0.12.2"]
+                 ;; [dire "0.5.4"]     ;; error logic decomplection
                  ]
 
   :min-lein-version "2.0.0"

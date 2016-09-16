@@ -60,10 +60,12 @@
 ;;     (db/get-customer {:id id})))
 
 (def subsystems
-  {:all>      [:outbound> :credit :financial :authorization]
+  {:all-flat  [:order :price :project :chat :credit :financial :authorization :admin]
+   :credit-flat  [:price :credit :financial]
+   :all>      [:outbound> :credit :financial :authorization]
    :outbound> [:order> :chat]
-   :ordering> [:price]
-   :project>  [:order> :project]
+   :order> [:order :price]
+   :project>  [:order :project]
    })
 
 (def permissions
@@ -71,29 +73,44 @@
    :edit  [:read :create :update]
    :admin [:read :create :update :delete]})
 
-(defn customer-subsystems [id]
-  (let [grants (db/get-customer-subsystems {:id id})
-        resources (map (comp keyword :resource) grants)]
-    (into {} (map #(vector % [:all>]) resources)))
-  )
-;; (customer-account-subsystems {:id 28})
-
-(defn customer-account-subsystems [id]
-  (let [grants (db/get-customer-account-subsystems {:id id})
-        accounts (map :account_number grants)]
-    (into {} (map #(vector (Integer. %) [:all>]) accounts)))
-  )
-;; (customer-subsystems {:id 28})
-
-(defn permissions-for [customer-id account-num subsystem]
-  (let [global (customer-subsystems customer-id)]))
-
 ;; (db/get-customer {:id 28})
 ;; (db/get-customer-subsystems {:id 28})
 ;; (db/get-customer-account-subsystems {:id 28})
 
-;; NOTE: webtoken->customer-id should always be called (directly or indirectly)
-;;       to ensure the token has not expired.
+(defn customer-subsystems [id]
+  (let [grants (db/get-customer-subsystems {:id id})
+        resources (map (comp keyword :resource) grants)
+        all-subsystems (:all-flat subsystems)
+        credit-subsystems (:credit-flat subsystems)
+        ]
+    ;; (into {} (map #(vector % (subsystems (keyword (str (name %) "-flat")))) resources)))
+    (set (apply concat (map #(subsystems (keyword (str (name %) "-flat"))) resources))))
+  )
+;; (customer-subsystems 28)
 
-;; (mount/start)
-;; ()
+(defn all-customer-account-subsystems [id]
+  (let [grants (db/get-customer-account-subsystems {:id id})
+        accounts (map :account_number grants)
+        all-subsystems (:all-flat subsystems)
+        ]
+    (into {} (map #(vector (Integer. %) (set all-subsystems)) accounts)))
+  )
+;; (customer-subsystems 28)
+;; (customer-subsystems 4444)
+;; (all-customer-account-subsystems 28)
+
+(defn customer-account-subsystems [customer-id account-num]
+  (let [all (all-customer-account-subsystems customer-id)
+        acct-subsystems (all account-num)]
+    (if acct-subsystems acct-subsystems #{})))
+;; (customer-account-subsystems 28 1000736)
+
+(defn authorized? [customer-id account-num subsystem]
+  (or (contains? (customer-subsystems customer-id) subsystem)
+      (contains? (customer-account-subsystems customer-id account-num) subsystem)))
+;; (authorized? 28 1000736 :project)  ;; true
+;; (authorized? 28 1000736 :projectttt)  ;; false
+;; (authorized? 28 nil :project)  ;; true
+;; (authorized? 39 1021734 :project)  ;; true
+;; (authorized? 39 nil :project)  ;; false
+;; (authorized? 39 1000736 :project)  ;; false

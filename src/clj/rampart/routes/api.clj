@@ -37,17 +37,17 @@
 
     (context "/:version-num" []
       (GET "/accounts/:account-id/projects/:id" req
-        (api/process (query/make-query :project req)))
+        (api/process (query/make-query :project :project req)))
 
       (GET "/accounts/:account-id/projects" request
-        (api/process (query/make-query :projects request)))
+        (api/process (query/make-query :project :projects request)))
 
       (GET "/projects/:id" req
-        (api/process (query/make-query :project req)))
+        (api/process (query/make-query :project :project req)))
 
       (GET "/projects" request
-        (api/process (query/make-query :projects request)))
+        (api/process (query/make-query :project :projects request)))
 
       (GET "/orders/:id" request
-        (api/process (query/make-query :order request)))
+        (api/process (query/make-query :order :order request)))
       )))

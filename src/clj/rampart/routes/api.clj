@@ -36,6 +36,12 @@
                                 :uri "/api/v2/projects"))))
 
     (context "/:version-num" []
+      (GET "/accounts/:account-id/projects/:id" req
+        (api/process (query/make-query :project req)))
+
+      (GET "/accounts/:account-id/projects" request
+        (api/process (query/make-query :projects request)))
+
       (GET "/projects/:id" req
         (api/process (query/make-query :project req)))
 

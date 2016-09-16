@@ -11,16 +11,18 @@
             ;; [rampart.config :refer [env]]
 
             [rampart.authorization :as auth]
-            ))
+
+            [summit.utils.core :as utils]))
 
 (defn- gather-params [req]
   (merge
    (:params req)
-   (:filter req)))   ;; to accomodate json-api's putting query params into filters.
+   (:filter (:params req))))   ;; to accomodate json-api's putting query params into filters.
+   ;; (:filter req)))   ;; to accomodate json-api's putting query params into filters.
 
 (defn make-query [query-name request]
   (let [query {:request request
-               :query (assoc (gather-params request) :query-name query-name)
+               :query (assoc (utils/ppl "gather-params:" (gather-params request)) :query-name query-name)
                }
         customer-id (auth/request->customer-id request)]
     (if customer-id

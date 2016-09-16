@@ -59,7 +59,7 @@
 (defn process [query]
   (->
    query
-   utils/ppl
+   ;; utils/ppl
    prepare-query
    pre-validate
    pre-authorize

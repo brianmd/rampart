@@ -15,10 +15,11 @@
   (dump/handle-dump req)
   )
 
-(defn- gather-params [req]
-  (merge
-   (:params req)
-   (:filter (:params req))))
+;; (defn- gather-params [req]
+;;   (merge
+;;    (:params req)
+;;    (:filter req)))
+;;    ;; (:filter (:params req))))
 
 (defroutes api-routes-v2
   (GET "/dump*" req (println "\n\n\n-------------\n\n\n") (dump-page req))

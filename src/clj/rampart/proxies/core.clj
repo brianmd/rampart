@@ -20,7 +20,7 @@
     ))
 
 (def debug-options
-  {:debug false
+  {:debug true
    :debug-body false})
   ;; {:debug true
   ;;  :debug-body true})

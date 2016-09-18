@@ -53,6 +53,7 @@
     (some #{"migrate" "rollback"} args)
     (do
       (mount/start #'rampart.config/env)
+      (println env)
       (migrations/migrate args (select-keys env [:database-url]))
       (System/exit 0))
     :else

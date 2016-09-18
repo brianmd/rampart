@@ -32,6 +32,8 @@
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [luminus-immutant "0.2.2"]
 
+                 [ring/ring-devel "1.5.0"]
+                 [org.clojure/core.async "0.2.391"]
                  [cheshire "5.6.3"]
                  [clj-http "2.2.0"]
                  [slingshot "0.12.2"]
@@ -86,7 +88,7 @@
 
    :project/dev  {:dependencies [[prone "1.1.1"]
                                  [ring/ring-mock "0.3.0"]
-                                 [ring/ring-devel "1.5.0"]
+                                 ;; [ring/ring-devel "1.5.0"]
                                  [pjstadig/humane-test-output "0.8.1"]
                                  [doo "0.1.7"]
                                  [binaryage/devtools "0.8.1"]

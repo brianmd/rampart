@@ -62,17 +62,45 @@
     (let [body (-> query :response :body parse-string)]
       (assoc query :body-object body))))
 
+
+(defn extract-relationships [json-api-map]
+  (let [data (or (:data json-api-map) (json-api-map "data"))
+        data (if (map? data) [data] data)
+        ;; relationships (map #((vals (% "relationships")) "data") data)
+        relationships (map #(vals (% "relationships")) data)
+        datas (map #(vals %) (flatten relationships))
+        ]
+    (set (flatten datas))
+    ))
+
+(defn extract-account-relationships [json-api-map]
+  (->>
+   (extract-relationships json-api-map)
+   (filter #(= "account" (% "type")))
+   (map #(utils/->long (% "id")))
+   ))
+
 (defn- post-authorize [query]
   (if perform-authorization?
     (let [q (:query query)
           cust-id (:customer-id q)
           subsystem (:subsystem q)
+          body (:body-object query)
           ;; acct-num (-> q :params :account)
-          acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
-          acct-num (if acct-num acct-num (-> q :params :account)) ;; TODO: remove this
-          acct-num (if acct-num (utils/->int acct-num))
+          ;; acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
+          ;; acct-num (if acct-num acct-num (-> q :params :account)) ;; TODO: remove this
+          ;; acct-num (if acct-num (utils/->int acct-num))
+          account-nums (extract-account-relationships body)
           ]
-      (println "\n\ncust, acct, subsystem:" cust-id acct-num subsystem (keys query) q)
+      (println "\n\ncust, accts, subsystem:" cust-id account-nums subsystem (keys query) q)
+      ;; (println "\nkeys for relationships:")
+      ;; (prn (extract-relationships body))
+      ;; (println "\n\n")
+      (println "\nkeys for accounts:")
+      (prn account-nums)
+      (println "\n\n")
+      ;; (prn "keys for data:")
+      ;; (prn (get-in body ["data"]))
       ;; (when-not acct-num
       ;;   (utils/ppn (:body-object query))
       ;;   (throw+ {:type :not-found :message "no account return"}))

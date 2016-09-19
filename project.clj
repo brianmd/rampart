@@ -97,7 +97,10 @@
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.14.0"]
                                  [lein-doo "0.1.7"]
                                  [lein-figwheel "0.5.7"]
-                                 [org.clojure/clojurescript "1.9.229"]]
+                                 [org.clojure/clojurescript "1.9.229"]
+
+                                 ;; [com.palletops/uberimage "0.4.1"]
+                                 ]
                   :cljsbuild
                   {:builds
                    {:app

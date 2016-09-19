@@ -16,6 +16,10 @@
             [rampart.proxies :as proxies]
             ))
 
+(def do-auth? (atom true))
+(defn perform-authorization? []
+  @do-auth?)
+
 (defn timenow [] (java.time.LocalDateTime/now))
 
 (defn- prepare-query [query]
@@ -26,6 +30,19 @@
   query)
 
 (defn- pre-authorize [query]
+  (if false  ;;perform-authorization?
+    (let [cust-id (:customer-id (:query query))
+          acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
+          acct-num (if acct-num (utils/->int acct-num))
+          subsystem (:subsystem query)
+          ]
+      (println "\n\ncust, acct, subsystem:" cust-id acct-num subsystem)
+      (when-not acct-num
+        (utils/ppn (:body-object query))
+        (throw+ {:type :not-found :message "no account return"}))
+      (when-not (auth/authorized? cust-id acct-num subsystem)
+        (throw+ {:type :not-authorized}))
+      ))
   ;; (let [cust-id 28
   ;;       acct-num 1000736
   ;;       subsystem :project]
@@ -46,18 +63,22 @@
       (assoc query :body-object body))))
 
 (defn- post-authorize [query]
-  (let [cust-id (:customer-id query)
-        acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
-        acct-num (if acct-num (utils/->int acct-num))
-        subsystem :project
-        ]
-    (println cust-id acct-num subsystem)
-    (when-not acct-num
-      (utils/ppn (:body-object query))
-      (throw+ {:type :not-found :message "no account return"}))
-    (when-not (auth/authorized? cust-id acct-num subsystem)
-      (throw+ {:type :not-authorized}))
-    )
+  (if perform-authorization?
+    (let [q (:query query)
+          cust-id (:customer-id q)
+          subsystem (:subsystem q)
+          ;; acct-num (-> q :params :account)
+          acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
+          acct-num (if acct-num acct-num (-> q :params :account)) ;; TODO: remove this
+          acct-num (if acct-num (utils/->int acct-num))
+          ]
+      (println "\n\ncust, acct, subsystem:" cust-id acct-num subsystem (keys query) q)
+      ;; (when-not acct-num
+      ;;   (utils/ppn (:body-object query))
+      ;;   (throw+ {:type :not-found :message "no account return"}))
+      ;; (when-not (auth/authorized? cust-id acct-num subsystem)
+      ;;   (throw+ {:type :not-authorized}))
+      ))
   query)
 
 (defn- finalize-query [query]
@@ -76,7 +97,7 @@
         body (:body-object query)
         body (assoc body :query (:query query))
         ]
-    (println "boo format-response")
+    (println "boo format-response query:" (:query query))
     (if response
       {:status (:status response)
        :body body

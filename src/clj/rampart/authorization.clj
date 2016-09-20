@@ -23,7 +23,7 @@
 (defn request->customer-id
   "found from the webtoken in Authoriation line of header"
   [req]
-  (when-let [auth (:authorization (:headers req))]
+  (when-let [auth (get-in req [:headers "authorization"])]
     (let [token (last (str/split auth #" "))]
       (webtoken->customer-id token))))
 

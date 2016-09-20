@@ -50,7 +50,7 @@
   ;;     (throw+ {:type :not-authorized})))
   query)
 
-(defn- proxy-request [query]
+(defn- proxy-query [query]
   (proxies/process-proxy query))
 
 (defn- post-validate [query]
@@ -104,6 +104,7 @@
         (println "request keys:" (keys (:request query)))
         (println "\nheader keys:" (keys (:headers (:request query))))
         (println "authorization:" (:authorization (:headers (:request query))))
+        (println "headers:" (:headers (:request query)))
         (println "\n")
         (if (nil? authorize-fn)
           (default-post-authorize-fn query account-nums)
@@ -148,7 +149,7 @@
    pre-validate
    pre-authorize
    (utils/ppbl "after pre-auth")
-   proxy-request
+   proxy-query
    add-body-object
    post-validate
    post-authorize

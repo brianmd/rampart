@@ -84,22 +84,20 @@
   (let [cust-id (-> query :query :customer-id)
         subsystem (-> query :query :subsystem)]
     (println "post-auth-fn account-nums:" account-nums ", cust-id: " cust-id)
+    (when (empty? account-nums)
+      (utils/ppn "no account numbers returned" (:body-object query))
+      (throw+ {:type :not-found :message "no account return"}))
     (doseq [acct-num account-nums]
       (println "checking " acct-num " ...")
       (when-not (auth/authorized? cust-id acct-num subsystem)
-        (println "    nope :("))
-      ))
-  ;; (when (empty? account-nums)
-  ;;   (utils/ppn (:body-object query))
-  ;;   (throw+ {:type :not-found :message "no account return"}))
-  ;; (map (fn [acct-num]
-  ;;        (when-not (auth/authorized? cust-id acct-num subsystem)
-  ;;          (throw+ {:type :not-authorized})))
-  ;;      account-nums)
-  )
+        ;; (println "    nope :(")
+        (throw+ {:type :not-authorized})
+        )
+      )))
 
 (defn- post-authorize [query]
-  (let [authorize-fn (:post-authorize (:query-def query))]
+  (let [authorize (:post-authorize? (:query-def query))
+        authorize-fn (or (:post-authorize-fn (:query-def query)) default-post-authorize-fn)]
     (if true ;(and (perform-authorization?) authorize-fn)
       (let [q            (:query query)
             cust-id      (:customer-id q)
@@ -113,9 +111,7 @@
         (println "\nheader keys:" (keys (:headers (:request query))))
         (println "authorization:" (get-in query [:request :headers "authorization"]))
         (println "\n")
-        (if (nil? authorize-fn)
-          (default-post-authorize-fn query account-nums)
-          (authorize-fn query account-nums))
+        (authorize-fn query account-nums)
         )))
   query)
 

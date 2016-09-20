@@ -48,22 +48,25 @@
 ;;          {:status 200
 ;;           :body {:a :ok}}))
 
+
+
 (def ^:private rosetta-query-defs
   [
    {:name :project
-    :pre-authorize true
+    :post-authorize? true
     }
    {:name :projects
-    :post-authorize true
+    :pre-authorize? true
+    :post-authorize? true
     }
    {:name :order
-    :post-authorize true
+    :post-authorize? true
     }
    ])
 
 (def ^:private query-def-defaults
-  {:pre-authorize nil
-   :post-authorize nil
+  {:pre-authorize? nil
+   :post-authorize? nil
    :service #'rosetta-proxy})
 
 (defn- make-query-def [query]

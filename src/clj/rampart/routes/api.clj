@@ -9,7 +9,10 @@
 
             [rampart.process-api :as api]
             [rampart.web-query :as query]
-            ))
+
+            [rampart.authorization :as auth]
+
+            [summit.utils.core :as utils]))
 
 (defn dump-page [req]
   (dump/handle-dump req)
@@ -21,8 +24,31 @@
 ;;    (:filter req)))
 ;;    ;; (:filter (:params req))))
 
+
 (defroutes api-routes-v2
   (GET "/dump*" req (println "\n\n\n-------------\n\n\n") (dump-page req))
+  (GET "/customers/:cust-id/subsystems" req
+    (let [params (:params req)
+          cust-id (utils/->long (:cust-id params))
+          global-subsystems (auth/customer-subsystems cust-id)
+          subsystems (auth/all-customer-account-subsystems cust-id)
+          ]
+      {:status 200
+       :accept :json
+       :body (merge {:global global-subsystems} subsystems)
+       }))
+  (GET "/customers/:cust-id/accounts/:acct-id/subsystems" req
+    (let [params (:params req)
+          subsystems
+          (auth/customer-account-subsystems (utils/->long (:cust-id params)) (utils/->long (:acct-id params)))
+          ]
+      {:status 200
+       :accept :json
+       ;; :body [(:cust-id params) :acct-id params] ;subsystems
+       ;; :body (vector (utils/->long (:cust-id params)) (utils/->long (:acct-id params)))
+       :body subsystems
+       }))
+
   (context "/api" []
     (GET "/projects/:id" req
       (api/process
@@ -36,6 +62,7 @@
                          :projects
                          (assoc req
                                 :uri "/api/v2/projects"))))
+
 
     (context "/:version-num" []
       (GET "/do-auth/:val" req

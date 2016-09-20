@@ -81,6 +81,14 @@
    ))
 
 (defn default-post-authorize-fn [query account-nums]
+  (let [cust-id (-> query :query :customer-id)
+        subsystem (-> query :query :subsystem)]
+    (println "post-auth-fn account-nums:" account-nums ", cust-id: " cust-id)
+    (doseq [acct-num account-nums]
+      (println "checking " acct-num " ...")
+      (when-not (auth/authorized? cust-id acct-num subsystem)
+        (println "    nope :("))
+      ))
   ;; (when (empty? account-nums)
   ;;   (utils/ppn (:body-object query))
   ;;   (throw+ {:type :not-found :message "no account return"}))

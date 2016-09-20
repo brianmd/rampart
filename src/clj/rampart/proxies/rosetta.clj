@@ -72,7 +72,7 @@
 (defn- make-query-defs [queries]
   (into {} (map #(make-query-def %) queries)))
 
-(def query-definitions (make-query-defs rosetta-queries))
+(def query-definitions (make-query-defs rosetta-query-defs))
 
 ;; (def proxy
 ;;   {:name :rosetta

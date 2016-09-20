@@ -11,15 +11,16 @@
 
 (defn make-query [subsystem-name query-name request]
   (let [customer-id (auth/request->customer-id request)
-        query {:request request
-               :query {:subsystem subsystem-name
-                       :query-name query-name
-                       :params (gather-params request)
-                       :customer-id (or customer-id 2742)
-                       }
-               }
-        ]
-    (if customer-id
-      (assoc query :customer-id customer-id)
-      query)))
+        server      (-> request :params :env :server)
+        query       {:request request
+                     :query   {:subsystem   subsystem-name
+                               :query-name  query-name
+                               :params      (gather-params request)
+                               :customer-id (or customer-id 2742)
+                               }}]
+    (cond-> query
+      true        (assoc :serv server)
+      server      (assoc-in [:query :server] server)
+      customer-id (assoc-in [:query :customer-id] customer-id)
+      )))
 

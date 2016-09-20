@@ -80,33 +80,35 @@
    (map #(utils/->long (% "id")))
    ))
 
+(defn default-post-authorize-fn [query account-nums]
+  ;; (when (empty? account-nums)
+  ;;   (utils/ppn (:body-object query))
+  ;;   (throw+ {:type :not-found :message "no account return"}))
+  ;; (map (fn [acct-num]
+  ;;        (when-not (auth/authorized? cust-id acct-num subsystem)
+  ;;          (throw+ {:type :not-authorized})))
+  ;;      account-nums)
+  )
+
 (defn- post-authorize [query]
-  (if perform-authorization?
-    (let [q (:query query)
-          cust-id (:customer-id q)
-          subsystem (:subsystem q)
-          body (:body-object query)
-          ;; acct-num (-> q :params :account)
-          ;; acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
-          ;; acct-num (if acct-num acct-num (-> q :params :account)) ;; TODO: remove this
-          ;; acct-num (if acct-num (utils/->int acct-num))
-          account-nums (extract-account-relationships body)
-          ]
-      (println "\n\ncust, accts, subsystem:" cust-id account-nums subsystem (keys query) q)
-      ;; (println "\nkeys for relationships:")
-      ;; (prn (extract-relationships body))
-      ;; (println "\n\n")
-      (println "\nkeys for accounts:")
-      (prn account-nums)
-      (println "\n\n")
-      ;; (prn "keys for data:")
-      ;; (prn (get-in body ["data"]))
-      ;; (when-not acct-num
-      ;;   (utils/ppn (:body-object query))
-      ;;   (throw+ {:type :not-found :message "no account return"}))
-      ;; (when-not (auth/authorized? cust-id acct-num subsystem)
-      ;;   (throw+ {:type :not-authorized}))
-      ))
+  (let [authorize-fn (:post-authorize (:query-def query))]
+    (if true ;(and (perform-authorization?) authorize-fn)
+      (let [q            (:query query)
+            cust-id      (:customer-id q)
+            subsystem    (:subsystem q)
+            body         (:body-object query)
+            account-nums (extract-account-relationships body)
+            ]
+        (println "\n\ncust, accts, subsystem:" cust-id account-nums subsystem (keys query) q)
+        (println "query keys:" (keys query))
+        (println "request keys:" (keys (:request query)))
+        (println "\nheader keys:" (keys (:header (:request query))))
+        (println "authorization:" (:authorization (:header (:request query))))
+        (println "\n")
+        (if (nil? authorize-fn)
+          (default-post-authorize-fn query account-nums)
+          (authorize-fn query account-nums))
+        )))
   query)
 
 (defn- finalize-query [query]

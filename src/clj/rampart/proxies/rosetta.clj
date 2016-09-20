@@ -48,12 +48,31 @@
 ;;          {:status 200
 ;;           :body {:a :ok}}))
 
-(def project-fn
-  {:name :project
-   :pre-validate (fn [query])
-   ;; :pre-authorize (fn [customer query] (authorize customer-id (:account-num query) :project))
-   :service rosetta-proxy
-   })
+(def ^:private rosetta-query-defs
+  [
+   {:name :project
+    :pre-authorize true
+    }
+   {:name :projects
+    :post-authorize true
+    }
+   {:name :order
+    :post-authorize true
+    }
+   ])
+
+(def ^:private query-def-defaults
+  {:pre-authorize nil
+   :post-authorize nil
+   :service #'rosetta-proxy})
+
+(defn- make-query-def [query]
+  [(:name query) (merge defaults query)])
+
+(defn- make-query-defs [queries]
+  (into {} (map #(make-query %) queries)))
+
+(def query-definitions (make-query-defs rosetta-queries))
 
 ;; (def proxy
 ;;   {:name :rosetta

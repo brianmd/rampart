@@ -21,13 +21,13 @@
    ;; (:filter req)))   ;; to accomodate json-api's putting query params into filters.
 
 (defn make-query [subsystem query-name request]
-  (let [query {:request request
+  (let [customer-id (auth/request->customer-id request)
+        query {:request request
                :query {:subsystem subsystem
                        :query-name query-name
                        :params (gather-params request)
                        }
                }
-        customer-id (auth/request->customer-id request)
         ]
     (if customer-id
       (assoc query :customer-id customer-id)

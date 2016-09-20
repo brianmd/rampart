@@ -15,7 +15,7 @@
                :query {:subsystem subsystem-name
                        :query-name query-name
                        :params (gather-params request)
-                       :customer-id customer-id
+                       :customer-id (or customer-id 2742)
                        }
                }
         ]

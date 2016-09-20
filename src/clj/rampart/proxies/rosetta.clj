@@ -67,10 +67,10 @@
    :service #'rosetta-proxy})
 
 (defn- make-query-def [query]
-  [(:name query) (merge defaults query)])
+  [(:name query) (merge query-def-defaults query)])
 
 (defn- make-query-defs [queries]
-  (into {} (map #(make-query %) queries)))
+  (into {} (map #(make-query-def %) queries)))
 
 (def query-definitions (make-query-defs rosetta-queries))
 

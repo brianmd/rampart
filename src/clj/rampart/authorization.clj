@@ -1,5 +1,6 @@
 (ns rampart.authorization
   (:require [clojure.string :as str]
+            [clojure.set :as set]
 
             [mount.core :as mount]
             [rampart.db.core :as db]
@@ -9,7 +10,7 @@
             [clj-http.client :as client]
             [rampart.config :refer [env]]
 
-            ))
+            [clojure.set :as set]))
 
 
 (defn decipher-webtoken [secret token]
@@ -23,9 +24,11 @@
 (defn request->customer-id
   "found from the webtoken in Authoriation line of header"
   [req]
-  (when-let [auth (get-in req [:headers "authorization"])]
-    (let [token (last (str/split auth #" "))]
-      (webtoken->customer-id token))))
+  (if (= (env :pw) (-> req :params :env :pw))
+    (-> req :params :env :customer-id)
+    (when-let [auth (get-in req [:headers "authorization"])]
+      (let [token (last (str/split auth #" "))]
+        (webtoken->customer-id token)))))
 
 (defn bh-webtoken
   "returns webtoken after logging into bh"
@@ -99,15 +102,20 @@
 ;; (customer-subsystems 4444)
 ;; (all-customer-account-subsystems 28)
 
-(defn customer-account-subsystems [customer-id account-num]
+(defn customer-account-specific-subsystems [customer-id account-num]
   (let [all (all-customer-account-subsystems customer-id)
         acct-subsystems (all account-num)]
     (if acct-subsystems acct-subsystems #{})))
+
+(defn customer-account-subsystems [customer-id account-num]
+  (set/union (customer-subsystems customer-id)
+             (customer-account-specific-subsystems customer-id account-num)))
+
 ;; (customer-account-subsystems 28 1000736)
+;; (customer-account-subsystems 28 1002225)
 
 (defn authorized? [customer-id account-num subsystem]
-  (or (contains? (customer-subsystems customer-id) subsystem)
-      (contains? (customer-account-subsystems customer-id account-num) subsystem)))
+  (contains? (customer-account-subsystems customer-id account-num) subsystem))
 ;; (authorized? 28 1000736 :project)  ;; true
 ;; (authorized? 28 1000736 :projectttt)  ;; false
 ;; (authorized? 28 nil :project)  ;; true

@@ -9,7 +9,7 @@
    (:params req)
    (:filter (:params req))))   ;; to accomodate json-api's putting query params into filters.
 
-(defn make-query [subsystem-name query-name request]
+(defn make-query-request [subsystem-name query-name request]
   (let [customer-id (auth/request->customer-id request)
         server      (-> request :params :env :server)
         query       {:request request

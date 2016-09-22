@@ -38,18 +38,17 @@ order line items?)
 The central component is the system is this function:
 
 ```clojure
-(defn process [query]
+(defn process [query-request]
   (->>
    query
    prepare-query
    pre-validate
    pre-authorize
    process-request
-   add-body-object
    post-validate
    post-authorize
    finalize-query
-   format-response))
+   ))
 ```
    
 The query parameter is a map which is returned from each function, and in

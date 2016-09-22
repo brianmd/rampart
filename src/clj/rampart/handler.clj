@@ -24,6 +24,7 @@
         (wrap-routes middleware/wrap-formats)
         (wrap-routes ramwrap/wrap-error)
         (wrap-routes ramwrap/wrap-logger)
+        (wrap-routes ramwrap/wrap-formatter)
         )
     (route/not-found
       (:body

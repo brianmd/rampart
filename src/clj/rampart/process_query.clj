@@ -22,23 +22,23 @@
 
 (defn timenow [] (java.time.LocalDateTime/now))
 
-(defn- prepare-query [query]
-  (assoc query
+(defn- prepare-query [query-request]
+  (assoc query-request
          :query-start-time (timenow)))
 
-(defn- pre-validate [query]
-  query)
+(defn- pre-validate [query-request]
+  query-request)
 
-(defn- pre-authorize [query]
+(defn- pre-authorize [query-request]
   (if false  ;;perform-authorization?
-    (let [cust-id (:customer-id (:query query))
-          acct-num (get-in query [:body-object "data" "relationships" "account" "data" "id"])
+    (let [cust-id (:customer-id (:query query-request))
+          acct-num (get-in query-request [:result "data" "relationships" "account" "data" "id"])
           acct-num (if acct-num (utils/->int acct-num))
-          subsystem (:subsystem query)
+          subsystem (:subsystem query-request)
           ]
       (println "\n\ncust, acct, subsystem:" cust-id acct-num subsystem)
       (when-not acct-num
-        (utils/ppn (:body-object query))
+        (utils/ppn (:result query-request))
         (throw+ {:type :not-found :message "no account return"}))
       (when-not (auth/authorized? cust-id acct-num subsystem)
         (throw+ {:type :not-authorized}))
@@ -48,19 +48,27 @@
   ;;       subsystem :project]
   ;;   (if-not (auth/authorized? cust-id acct-num subsystem)
   ;;     (throw+ {:type :not-authorized})))
-  query)
+  query-request)
 
-(defn- process-query [query]
-  (services/process-service query))
+(defn- run [query-request fn-name & args]
+  query-request)
 
-(defn- post-validate [query]
-  query)
+(defn- process-query [query-request]
+  (->
+   query-request
+   (run :pre-process-query)
+   services/process-service
+   (run :post-process-query)
+   ))
 
-(defn add-body-object [query]
-  (if-let [obj (:body-object query)]
-    query
-    (let [body (-> query :response :body parse-string)]
-      (assoc query :body-object body))))
+(defn- post-validate [query-request]
+  query-request)
+
+(defn add-result [query-request]
+  (if-let [obj (:result query-request)]
+    query-request
+    (let [body (-> query-request :response :body parse-string)]
+      (assoc query-request :result body))))
 
 
 (defn extract-relationships [json-api-map]
@@ -80,12 +88,12 @@
    (map #(utils/->long (% "id")))
    ))
 
-(defn default-post-authorize-fn [query account-nums]
-  (let [cust-id (-> query :query :customer-id)
-        subsystem (-> query :query :subsystem)]
+(defn default-post-authorize-fn [query-request account-nums]
+  (let [cust-id (-> query-request :query :customer-id)
+        subsystem (-> query-request :query :subsystem)]
     (println "post-auth-fn account-nums:" account-nums ", cust-id: " cust-id)
     (when (empty? account-nums)
-      (utils/ppn "no account numbers returned" (:body-object query))
+      (utils/ppn "no account numbers returned" (:result query-request))
       (throw+ {:type :not-found :message "no account return"}))
     (doseq [acct-num account-nums]
       (println "checking " acct-num " ...")
@@ -95,57 +103,33 @@
         )
       )))
 
-(defn- post-authorize [query]
-  (let [authorize (:post-authorize? (:query-def query))
-        authorize-fn (or (:post-authorize-fn (:query-def query)) default-post-authorize-fn)]
+(defn- post-authorize [query-request]
+  (let [authorize (:post-authorize? (:query-def query-request))
+        authorize-fn (or (:post-authorize-fn (:query-def query-request)) default-post-authorize-fn)]
     (if true ;(and (perform-authorization?) authorize-fn)
-      (let [q            (:query query)
+      (let [q            (:query query-request)
             cust-id      (:customer-id q)
             subsystem    (:subsystem q)
-            body         (:body-object query)
+            body         (:result query-request)
             account-nums (extract-account-relationships body)
             ]
-        (println "\n\ncust, accts, subsystem:" cust-id account-nums subsystem (keys query) q)
-        (println "query keys:" (keys query))
-        (println "request keys:" (keys (:request query)))
-        (println "\nheader keys:" (keys (:headers (:request query))))
-        (println "authorization:" (get-in query [:request :headers "authorization"]))
+        (println "\n\ncust, accts, subsystem:" cust-id account-nums subsystem (keys query-request) q)
+        (println "query keys:" (keys query-request))
+        (println "request keys:" (keys (:request query-request)))
+        (println "\nheader keys:" (keys (:headers (:request query-request))))
+        (println "authorization:" (get-in query-request [:request :headers "authorization"]))
         (println "\n")
-        (authorize-fn query account-nums)
+        (authorize-fn query-request account-nums)
         )))
-  query)
+  query-request)
 
-(defn- finalize-query [query]
-  query)
+(defn- finalize-query [query-request]
+  (assoc query-request
+         :query-stop-time (timenow)))
 
-(defn- format-response [query]
-  (println "in format-response")
-  (let [request (:request query)
-        response (:response query)
-        full-body (:body response)
-        ;; flags (:flags (:params request))
-        ;; full-body (parse-string full-body)
-        ;; meta-body (if (= "1" (:meta flags)) full-body (dissoc full-body :meta))
-        ;; body (if (= "1" (:raw flags)) meta-body (dissoc meta-body :raw))
-        body full-body
-        body (:body-object query)
-        body (assoc body :query (:query query))
-        ]
-    (println "boo format-response query:" (:query query))
-    (if response
-      {:status (:status response)
-       :body body
-       ;; :body response
-       :headers {"Content-Type" "application/json; charset=utf-8"}
-       }
-      {:status 400
-       :body {:errors ["nil was returned"]}})))
-
-
-
-(defn process [query]
+(defn process [query-request]
   (->>
-   query
+   query-request
    ;; utils/ppl
    prepare-query
    (utils/ppbl "after prep")
@@ -153,12 +137,12 @@
    pre-authorize
    (utils/ppbl "after pre-auth")
    process-query
-   add-body-object
+   add-result
    post-validate
    post-authorize
    (utils/ppbl "after post-auth")
    finalize-query
-   format-response))
+   ))
 
 
 ;; (mount/start)

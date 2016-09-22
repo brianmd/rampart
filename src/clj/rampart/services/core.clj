@@ -1,4 +1,4 @@
-(ns rampart.proxies.core
+(ns rampart.services.core
   (:require [clojure.string :as str]
 
             [mount.core :as mount]

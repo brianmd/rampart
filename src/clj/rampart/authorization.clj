@@ -63,10 +63,12 @@
 ;;     (db/get-customer {:id id})))
 
 (def subsystems
-  {:all-flat  [:order :price :project :chat :credit :financial :authorization :admin]
+  {
+   :all-flat  [:order :price :project :chat-admin :credit :financial :authorization :admin]
+   :all-account-flat [:order :price :project :credit :financial :authorization :admin]
    :credit-flat  [:price :credit :financial]
    :all>      [:outbound> :credit :financial :authorization]
-   :outbound> [:order> :chat]
+   :outbound> [:order> :chat-admin]
    :order> [:order :price]
    :project>  [:order :project]
    })
@@ -94,7 +96,7 @@
 (defn all-customer-account-subsystems [id]
   (let [grants (db/get-customer-account-subsystems {:id id})
         accounts (map :account_number grants)
-        all-subsystems (:all-flat subsystems)
+        all-subsystems (:all-account-flat subsystems)
         ]
     (into {} (map #(vector (Integer. %) (set all-subsystems)) accounts)))
   )
@@ -113,6 +115,8 @@
 
 ;; (customer-account-subsystems 28 1000736)
 ;; (customer-account-subsystems 28 1002225)
+;; (customer-account-subsystems 28 1002225)
+;; (customer-account-subsystems 42 1023292)
 
 (defn authorized? [customer-id account-num subsystem]
   (contains? (customer-account-subsystems customer-id account-num) subsystem))

@@ -1,4 +1,4 @@
-(ns rampart.process-api
+(ns rampart.process-query
   (:require [clojure.string :as str]
 
             [mount.core :as mount]
@@ -13,7 +13,7 @@
 
             [summit.utils.core :as utils]
             [rampart.authorization :as auth]
-            [rampart.proxies :as proxies]
+            [rampart.services :as services]
             ))
 
 (def do-auth? (atom true))
@@ -50,8 +50,8 @@
   ;;     (throw+ {:type :not-authorized})))
   query)
 
-(defn- proxy-query [query]
-  (proxies/process-proxy query))
+(defn- process-query [query]
+  (services/process-service query))
 
 (defn- post-validate [query]
   query)
@@ -152,7 +152,7 @@
    pre-validate
    pre-authorize
    (utils/ppbl "after pre-auth")
-   proxy-query
+   process-query
    add-body-object
    post-validate
    post-authorize

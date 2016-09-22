@@ -19,6 +19,20 @@ To start a web server for the application, run:
 
 Framework to provide authentication/authorization to backend servers.
     
+## Subsystem vs. Service
+
+Rampart's definition of service is an api server providing services,
+disregarding how well partitioned the api server is.
+
+A subsystem is a set of functionality. Ideally a subsystem has a
+one-to-one correspondence with a service. However, particularly
+when a system is evolving, the services may not be completely or
+correctly partitioned/normalized. Also, there are cases where a
+subsystem crosses service boundaries. For example, a price subsystem
+may be both in an ecommerce service (i.e., can prices be shown on product
+pages?) and a project management subsystem (can prices be shown on
+order line items?)
+
 ## Process description
 
 The central component is the system is this function:
@@ -30,7 +44,7 @@ The central component is the system is this function:
    prepare-query
    pre-validate
    pre-authorize
-   proxy-request
+   process-request
    add-body-object
    post-validate
    post-authorize

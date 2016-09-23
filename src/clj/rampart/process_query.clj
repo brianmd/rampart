@@ -50,26 +50,17 @@
   ;;     (throw+ {:type :not-authorized})))
   query-request)
 
-(defn- run [query-request fn-name & args]
-  query-request)
-
-(defn- process-query [query-request]
-  (->
-   query-request
-   (run :pre-process-query)
-   services/process-service
-   (run :post-process-query)
-   ))
-
-(defn- post-validate [query-request]
-  query-request)
+(defn process-query [query-request]
+  (services/process-service query-request))
 
 (defn add-result [query-request]
-  (if-let [obj (:result query-request)]
+  (if (:result query-request)
     query-request
     (let [body (-> query-request :response :body parse-string)]
       (assoc query-request :result body))))
 
+(defn- post-validate [query-request]
+  query-request)
 
 (defn extract-relationships [json-api-map]
   (let [data (or (:data json-api-map) (json-api-map "data"))
@@ -104,6 +95,8 @@
       )))
 
 (defn- post-authorize [query-request]
+  (println "keys" (keys query-request))
+  (println "keys2" (keys (:result query-request)))
   (let [authorize (:post-authorize? (:query-def query-request))
         authorize-fn (or (:post-authorize-fn (:query-def query-request)) default-post-authorize-fn)]
     (if true ;(and (perform-authorization?) authorize-fn)
@@ -127,20 +120,36 @@
   (assoc query-request
          :query-stop-time (timenow)))
 
+
+(defn- run [query-request fn-name args]
+  (prn fn-name)
+  query-request)
+
+(defn- wrap [query-request fn-var & args]
+  (println fn-var)
+  (let [fn-name-str (str (:name (meta fn-var)))]
+    (println "\n\n\n-------------------" fn-name-str "\n\n")
+    (->
+     query-request
+     (run (keyword (str "pre-" fn-name-str)) args)
+     fn-var
+     (run (keyword (str "post-" fn-name-str)) args)
+     )))
+
 (defn process [query-request]
-  (->>
+  (->
    query-request
    ;; utils/ppl
    prepare-query
-   (utils/ppbl "after prep")
+   ;; (utils/ppbl "after prep")
    pre-validate
    pre-authorize
-   (utils/ppbl "after pre-auth")
-   process-query
+   ;; (utils/ppbl "after pre-auth")
+   (wrap #'process-query)
    add-result
    post-validate
    post-authorize
-   (utils/ppbl "after post-auth")
+   ;; (utils/ppbl "after post-auth")
    finalize-query
    ))
 

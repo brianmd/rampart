@@ -23,6 +23,7 @@
        ;; :body response
        :headers {"Content-Type" "application/json; charset=utf-8"}
        }
+      ;; should probably throw an error so all errors are handled in the same place
       {:status 400
        :body {:errors ["nil was returned"]}})))
 

@@ -40,7 +40,7 @@ The central component is the system is this function:
 ```clojure
 (defn process [query-request]
   (->>
-   query
+   query-request
    prepare-query
    pre-validate
    pre-authorize
@@ -51,8 +51,10 @@ The central component is the system is this function:
    ))
 ```
    
-The query parameter is a map which is returned from each function, and in
-turn passed to the next function. It starts with a :query key,
+The query-request parameter is a map which is returned from each function, and in
+turn passed to the next function. Each step of the thread may add elements to the map. For example, prepare-query adds the :start-time.
+
+Query-request has one required key, the :query,
 which is also a map, containing :subsystem, :query-name,
 and :params keys.
 
@@ -72,6 +74,23 @@ Finally the params are parameters to be passed to the remote query.
 
 Pre-authorize typically authorizes the :query values, while post-authorize
 typically authorizes the body of response from the backend server.
+
+![Query engine](docs/query-engine.jpg)
+
+## Namespaces
+![Namespaces](docs/namespaces.jpg)
+
+The code is organized in namespaces. Though not part of the namespace name, this chart shows which belong to the responsibility of the query engine vs which to the http concern.
+
+The securities namespace will read the services provided by the proxied services into one map, which will be used for routing an incoming request to the appropriate service. Process-query contains the query engine as outlined above.
+
+Authorization provides translation from a webtoken into a customer id, as well as authorization of a query.
+
+Web query is responsible for finding the appropriate proxy server and customer id, and for building a query-request map. Note that while the query-engine only requires the query-request to contain the :query, web-query also adds the http :request, as it may be needed for properly formatting the map returned by the query-engine.
+
+Routes.api defines the allowable routes, generates the query-request, and processes the request.
+
+**Middleware:** Wrap-logger logs the requests. Wrap-error captures errors thrown by the query-engine to produce the proper http response. And wrap-formatter will be responsible for converting the proxy response into the web browser's desired format. (Currently adds the original :query to the response for debugging purposes.)
 
 ## License
 

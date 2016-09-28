@@ -17,21 +17,16 @@ To start a web server for the application, run:
     
 ## Description
 
-Framework to provide authentication/authorization to backend servers.
-    
-## Subsystem vs. Service
+Framework to provide authentication/authorization to backend services.
 
-Rampart's definition of service is an api server providing services,
-disregarding how well partitioned the api server is.
+Note: this project is functional and being used in production, but is incomplete. Some of the incomplete portions are described below with the future tense, as in, "will be".
 
-A subsystem is a set of functionality. Ideally a subsystem has a
-one-to-one correspondence with a service. However, particularly
-when a system is evolving, the services may not be completely or
-correctly partitioned/normalized. Also, there are cases where a
-subsystem crosses service boundaries. For example, a price subsystem
-may be both in an ecommerce service (i.e., can prices be shown on product
-pages?) and a project management subsystem (can prices be shown on
-order line items?)
+## Resource vs. data category
+![Data categories](docs/data-categories.jpg)
+
+Rampart serves resources provided by proxy services. Security is not a proxy service's concern -- that is rampart's concern. But how does it achieve this?
+
+It provides a data category overlay to the resources. For example, an order resource may have both an order data-category and a price data-category. In this way, a customer may be allowed to view orders (data category of order: [:view]) but prevented from viewing pricing (customer doesn't have price data category). In this case, the proxy server may ship the order with prices, and it will be rampart's responsibility to strip just the pricing info. It will do this via a schema of every field that may be returned by a query, and each field will define its data category (or will be nil, in which case it is in the parent's data category).
 
 ## Process description
 
@@ -78,7 +73,7 @@ typically authorizes the body of response from the backend server.
 ![Query engine](docs/query-engine.jpg)
 
 ## Namespaces
-![Namespaces](docs/namespaces.jpg)
+![Namespaces](docs/namespaces2.jpg)
 
 The code is organized in namespaces. Though not part of the namespace name, this chart shows which belong to the responsibility of the query engine vs which to the http concern.
 
@@ -91,6 +86,7 @@ Web query is responsible for finding the appropriate proxy server and customer i
 Routes.api defines the allowable routes, generates the query-request, and processes the request.
 
 **Middleware:** Wrap-logger logs the requests. Wrap-error captures errors thrown by the query-engine to produce the proper http response. And wrap-formatter will be responsible for converting the proxy response into the web browser's desired format. (Currently adds the original :query to the response for debugging purposes.)
+
 
 ## License
 

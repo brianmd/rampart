@@ -19,7 +19,7 @@ To start a web server for the application, run:
 
 Framework to provide authentication/authorization to backend services.
 
-Note: this project is functional and being used in production, but is incomplete. Some of the incomplete portions are described below with the future tense, as in, "will be".
+Note: this project is functional and being used in production, but portions will become more generalized and features added as time allows. Some of the incomplete portions are described below with the future tense, as in, "will be".
 
 ## Resource vs. data category
 ![Data categories](docs/data-categories.jpg)

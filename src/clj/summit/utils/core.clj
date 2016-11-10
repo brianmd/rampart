@@ -15,10 +15,10 @@
     (if (number? a-name)
       a-name
       (str/replace
-       (str/upper-case
+       ;; (str/upper-case
         (if (keyword? a-name)
           (name a-name)
-          (str a-name)))
+          (str a-name));)
        "-" "_"))))
 
 (defn ->keyword [a-string]

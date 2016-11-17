@@ -11,8 +11,55 @@
             [rampart.web-query :refer [make-query-request]]
 
             [rampart.authorization :as auth]
+            [rampart.wrappers :as wrappers]
+            [rampart.services.rosetta-helpers :as helpers]
 
-            [summit.utils.core :as utils]))
+            [summit.utils.core :as utils]
+            [rampart.services.rosetta :refer [http-request]]
+            ))
+
+;; :extract-account-nums (fn [m] (println "in extract") (pr (keys m)) (vector (:account-num m)))
+
+;; (process
+;;  (make-query-request :project
+;;                      :project-spreadsheet-data
+;;                      {:uri "/api/v2/project-spreadsheet-data/3?filter[account]=1037657&env[server]=prd&env[pw]=abcd&env[customer-id]=28"
+;;                       :request-method :get
+;;                       :params {:id 3 :account "1037657" :env {:server "prd" :pw "abcd" :customer-id "28"}}
+;;                       }))
+
+;; (make-query-request :project
+;;                     :project
+;;                      {:uri "/api/v2/projects/3?filter[account]=1037657&env[server]=prd&env[pw]=abcd&env[customer-id]=28"
+;;                       :request-method :get
+;;                       :params {:id 3 :account "1037657" :env {:server "prd" :pw "abcd" :customer-id "28"}}
+;;                       })
+
+;; (do
+;;   (rampart.process-query/process
+;;    {
+;;     ;; :request {:uri "/api/v2/projects/3" :query-string "account=1037657"}
+;;     :query {:subsystem :project
+;;             :query-name :project
+;;             :params {:id 3 :account-num "1037657"}
+;;             :server "prd"
+;;             :customer-id "28"
+;;             }})
+;;   nil)
+
+;; (rampart.process-query/process
+;;  {:request {:uri "/api/v2/projects/3" :query-string "account=1037657"}
+;;   :query {:subsystem :project
+;;           :query-name :projects
+;;           :params {:account-num 1037657}
+;;           :server "prd"
+;;           :customer-id 28
+;;           }})
+
+(defn ok-json [m]
+  {:status 200
+   :headers {"Content-Type" "text/json"}
+   :body m})
 
 (defn dump-page [req]
   (dump/handle-dump req)
@@ -26,6 +73,11 @@
 
 
 (defroutes api-routes-v2
+  (GET "/error/:bool" req
+    (let [bool (= "true" (-> req :params :bool))]
+      (wrappers/set-wrap-errors bool)
+      {:body {:set-wrap-errors bool}}))
+  (GET "/error*" req (/ 1 0)) ;; force error to show debugger in browser
   (GET "/dump*" req (println "\n\n\n-------------\n\n\n") (dump-page req))
   (GET "/customers/:cust-id/subsystems" req
     (let [params (:params req)
@@ -65,6 +117,14 @@
 
 
     (context "/:version-num" []
+      (GET "/default-server" req
+           (let [query-request (process
+                                (make-query-request :status
+                                                    :default-server
+                                                    (assoc req
+                                                           :uri "/api/v2/default-server")))]
+             (ok-json {:result (:result query-request)})
+             ))
       (GET "/do-auth/:val" req
         (let [v (-> req :params :val)]
           (println "do-auth " @do-auth? "<=" v)
@@ -76,7 +136,19 @@
       (GET "/accounts/:account-id/projects" req
         (process (make-query-request :project :projects req)))
 
+      (GET "/project-spreadsheet-data/:id" req
+        (/ 1 0)
+        (println req)
+        (process
+         (make-query-request :project
+                             :project-spreadsheet-data
+                             req
+                             ;; (assoc req
+                             ;;        :uri (clojure.string/replace (:uri req) #"api" "api/v2"))
+                             )))
+
       (GET "/projects/:id" req
+           ;; (ok-json {:a 99}))
         (process (make-query-request :project :project req)))
 
       (GET "/projects" req

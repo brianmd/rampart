@@ -12,7 +12,6 @@
 
             [clojure.set :as set]))
 
-
 (defn decipher-webtoken [secret token]
   (jwt/unsign token secret))
 

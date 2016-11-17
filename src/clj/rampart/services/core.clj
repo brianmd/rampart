@@ -11,7 +11,10 @@
             [rampart.config :refer [env]]
             ))
 
+;; TODO: should not use request
 (defn reconstitute-uri [base-url request]
+  (if (nil? base-url)
+    (throw "base-url must be set in reconstitute-uri. Perhaps need to call mount/start to load the environment?"))
   (let [query-str (if-let [q (:query-string request)]
                     (str "?" q)
                     "")
@@ -20,8 +23,8 @@
     ))
 
 (def debug-options
-  {:debug false
-   :debug-body false})
+  (atom {:debug false
+         :debug-body false}))
   ;; {:debug true
   ;;  :debug-body true})
 

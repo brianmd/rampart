@@ -3,5 +3,7 @@
             [rampart.services.rosetta :as rosetta]
             ))
 
-(defn process-service [query]
-  (rosetta/services query))
+;; currently dead simple as there is only one backend service
+(defn process-service [query-request]
+  (println "in process-service (before rosetta/services)")
+  (rosetta/http-request query-request))

@@ -14,23 +14,37 @@
             [summit.utils.core :as utils]
             [rampart.authorization :as auth]
             [rampart.services :as services]
-            ))
+
+            [rampart.services.rosetta :as rosetta]))
 
 (def do-auth? (atom true))
 (defn perform-authorization? []
   @do-auth?)
 
+(defn- dlog [& args] (apply println args))
+
 (defn timenow [] (java.time.LocalDateTime/now))
 
-(defn- prepare-query [query-request]
-  (assoc query-request
-         :query-start-time (timenow)))
+(defn- prepare-query [{:keys [query]
+                       :as query-request}]
+  (dlog "in prepare-query")
+  (let [qname (:query-name query)
+        qdef  (qname rosetta/query-definitions)]
+    (assoc query-request
+           :query-start-time (timenow)
+           :query (merge qdef query)
+           ;; :query-def qdef
+           )))
+;; (:projects rosetta/query-definitions)
 
 (defn- pre-validate [query-request]
+  (dlog "in pre-validate")
   query-request)
 
 (defn- pre-authorize [query-request]
-  (if false  ;;perform-authorization?
+  (dlog "in pre-authorize")
+  (when (-> query-request :query :pre-authorize?)
+  ;; (if false  ;;perform-authorization?
     (let [cust-id (:customer-id (:query query-request))
           acct-num (get-in query-request [:result "data" "relationships" "account" "data" "id"])
           acct-num (if acct-num (utils/->int acct-num))
@@ -39,7 +53,7 @@
       (println "\n\ncust, acct, subsystem:" cust-id acct-num subsystem)
       (when-not acct-num
         (utils/ppn (:result query-request))
-        (throw+ {:type :not-found :message "no account return"}))
+        (throw+ {:type :not-found :message "no account return (pre-auth)"}))
       (when-not (auth/authorized? cust-id acct-num subsystem)
         (throw+ {:type :not-authorized}))
       ))
@@ -51,6 +65,7 @@
   query-request)
 
 (defn process-query [query-request]
+  (dlog "in process-query")
   (services/process-service query-request))
 
 (defn add-result [query-request]
@@ -63,11 +78,17 @@
   query-request)
 
 (defn extract-relationships [json-api-map]
+  (dlog "in extract-relationships")
   (let [data (or (:data json-api-map) (json-api-map "data"))
         data (if (map? data) [data] data)
         ;; relationships (map #((vals (% "relationships")) "data") data)
         relationships (map #(vals (% "relationships")) data)
         datas (map #(vals %) (flatten relationships))
+
+        set-data (-> datas flatten set)
+
+        _ (println "\n\n relationship count" (-> set-data count))
+        _ (println "\n\n relationship " (-> set-data flatten set))
         ]
     (set (flatten datas))
     ))
@@ -80,31 +101,53 @@
    ))
 
 (defn default-post-authorize-fn [query-request account-nums]
-  (let [cust-id (-> query-request :query :customer-id)
-        subsystem (-> query-request :query :subsystem)]
-    (println "post-auth-fn account-nums:" account-nums ", cust-id: " cust-id)
-    (when (empty? account-nums)
-      (utils/ppn "no account numbers returned" (:result query-request))
-      (throw+ {:type :not-found :message "no account return"}))
-    (doseq [acct-num account-nums]
-      (println "checking " acct-num " ...")
-      (when-not (auth/authorized? cust-id acct-num subsystem)
-        ;; (println "    nope :(")
-        (throw+ {:type :not-authorized})
-        )
-      )))
+  ;; (println "query-request" query-request)
+  (println "query::" (:query query-request))
+  (when (-> query-request :query :post-authorize?)
+    (let [cust-id (-> query-request :query :customer-id)
+          subsystem (-> query-request :query :subsystem)]
+      (println "post-auth-fn account-nums:" account-nums ", cust-id: " cust-id)
+      (when (empty? account-nums)
+        (println (str "no account numbers returned. result keys: " (-> query-request :result keys)))
+        (throw+ {:type :not-found :message "no account return (post-auth)"}))
+      (doseq [acct-num account-nums]
+        (println "checking " acct-num " ...")
+        (when-not (auth/authorized? cust-id acct-num subsystem)
+          ;; (println "    nope :(")
+          (throw+ {:type :not-authorized})
+          )
+        ))))
 
 (defn- post-authorize [query-request]
+  (dlog "in post-authorize")
   (println "keys" (keys query-request))
   (println "keys2" (keys (:result query-request)))
-  (let [authorize (:post-authorize? (:query-def query-request))
-        authorize-fn (or (:post-authorize-fn (:query-def query-request)) default-post-authorize-fn)]
-    (if true ;(and (perform-authorization?) authorize-fn)
-      (let [q            (:query query-request)
+  ;; #break (println "in post-authorize")
+  (let [q (:query query-request)
+        authorize (:post-authorize? q)
+        authorize-fn (or (:post-authorize-fn q) default-post-authorize-fn)
+        extract-account-nums (or (:extract-account-nums q) extract-account-relationships)]
+    ;; #break (println "in post-authorize, before when")
+    ;; (when true ;(and (perform-authorization?) authorize-fn)
+
+
+
+
+    ;; (when false
+    (when (and (-> query-request :query :post-authorize?) authorize-fn)
+
+
+
+
+      (let [
+            ;;q            (:query query-request)
             cust-id      (:customer-id q)
             subsystem    (:subsystem q)
             body         (:result query-request)
-            account-nums (extract-account-relationships body)
+            _ (println "qdef" (keys q) "body size" (count body))
+            ;; account-nums (extract-account-relationships body)
+            account-nums (extract-account-nums body)
+            _ (println account-nums)
             ]
         (println "\n\ncust, accts, subsystem:" cust-id account-nums subsystem (keys query-request) q)
         (println "query keys:" (keys query-request))
@@ -117,24 +160,26 @@
   query-request)
 
 (defn- finalize-query [query-request]
+  (dlog "in finalize-query")
   (assoc query-request
          :query-stop-time (timenow)))
 
 
 (defn- run [query-request fn-name args]
-  (prn fn-name)
   query-request)
 
-(defn- wrap [query-request fn-var & args]
-  (println fn-var)
+(defn- wrap-pre-post [query-request fn-var & args]
+  (println "fn-var" (meta fn-var))
   (let [fn-name-str (str (:name (meta fn-var)))]
     (println "\n\n\n-------------------" fn-name-str "\n\n")
-    (->
-     query-request
-     (run (keyword (str "pre-" fn-name-str)) args)
-     fn-var
-     (run (keyword (str "post-" fn-name-str)) args)
-     )))
+    (let [result
+          (->
+           query-request
+           (run (keyword (str "pre-" fn-name-str)) args)
+           fn-var
+           (run (keyword (str "post-" fn-name-str)) args)
+           )]
+      result)))
 
 (defn process [query-request]
   (->
@@ -145,13 +190,15 @@
    pre-validate
    pre-authorize
    ;; (utils/ppbl "after pre-auth")
-   (wrap #'process-query)
+   (wrap-pre-post #'process-query)
    add-result
    post-validate
    post-authorize
    ;; (utils/ppbl "after post-auth")
    finalize-query
    ))
+
+
 
 
 ;; (mount/start)

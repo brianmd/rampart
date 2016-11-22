@@ -16,9 +16,19 @@
 
             [summit.utils.core :as utils]
             [rampart.services.rosetta :refer [http-request]]
-            ))
+            [rampart.spreadsheet :as spreadsheet]
+
+            [clojure.string :as str]))
 
 ;; :extract-account-nums (fn [m] (println "in extract") (pr (keys m)) (vector (:account-num m)))
+
+;; (process
+;;  (make-query-request :project
+;;                      :project
+;;                      {:uri "/api/v2/project/3?filter[account]=1037657&env[server]=prd&env[pw]=abcd&env[customer-id]=28"
+;;                       :request-method :get
+;;                       :params {:id 3 :account "1037657" :env {:server "prd" :pw "abcd" :customer-id "28"}}
+;;                       }))
 
 ;; (process
 ;;  (make-query-request :project
@@ -136,19 +146,24 @@
       (GET "/accounts/:account-id/projects" req
         (process (make-query-request :project :projects req)))
 
+      (GET "/project-spreadsheet/:id" req
+           (let [data (process (make-query-request :project :project-spreadsheet-data req))
+                 result (:result data)
+                 _ (println "data" (keys result))
+                 _ (prn (keys result))
+                 filepath (spreadsheet/create-temp-spreadsheet "amps" "xlsx" (result "headers") (result "data"))
+                 filename (last (str/split filepath #"/"))]
+             (println "filename::" filename)
+             {:status 200
+              :headers {"Content-Type" spreadsheet/mime-spreadsheet
+                        "Content-Disposition" (str "inline; filename\"" filename "\"")}
+              :body (io/file filepath)
+              }))
+
       (GET "/project-spreadsheet-data/:id" req
-        (/ 1 0)
-        (println req)
-        (process
-         (make-query-request :project
-                             :project-spreadsheet-data
-                             req
-                             ;; (assoc req
-                             ;;        :uri (clojure.string/replace (:uri req) #"api" "api/v2"))
-                             )))
+        (process (make-query-request :project :project-spreadsheet-data req)))
 
       (GET "/projects/:id" req
-           ;; (ok-json {:a 99}))
         (process (make-query-request :project :project req)))
 
       (GET "/projects" req

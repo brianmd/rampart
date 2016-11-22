@@ -25,13 +25,8 @@
 ;;                                         :customer-id 28
 ;;                                         }})
 
-;; clj-http.client/default-middleware
-;; clj-http.client/wrap-form-params
-
 (defn http-request [{:keys [query]
                      :as query-request}]
-  ;; (println "uri-fn" (:uri-fn query-def) (keys query-request) (keys (:query-def query-request)) (:query-name (:query query-request)))
-  ;; #break (keys query-request)
   (let [
         base-url (-> env :rosetta-url)
         uri-fn (:uri-fn query)
@@ -39,13 +34,6 @@
         _ (println "url:" url)
         method (:method query)
         params (:params query)
-        ;; request (:request query-request)      ;; TODO: should not use the incoming http request in the query engine!!!
-        ;; method (or (:request-method request) :get)
-        ;; _ (println "url" base-url request)
-        ;; url (core/reconstitute-uri base-url request)
-
-        ;; method (or (-> query-request :query-def :request-method) :get)
-        ;; base-url (:rosetta-url (cprop.source/from-env))
         http-params {:method method
                      :url url
                      :query-params params
@@ -58,12 +46,9 @@
                      }
         _ (println "http-request http-params:" http-params)
         http-params (merge http-params @core/debug-options)
-        ;; _ (utils/ppn "http-params (method ^ url)" http-params)
         ]
-    ;; #break http-params
     (let [
         response (client/request http-params)
-        ;; _ (utils/ppn "response:" (keys response))
         result (-> response :body json/parse-string)
         ]
       (assoc query-request
@@ -77,66 +62,55 @@
 ;; (:result hreq)
 
 
-;; (defn rosetta-service [query]
-;;   (assoc query :response
-;;          {:status 200
-;;           :body {:a :ok}}))
-
-
-
 (def ^:private query-def-defaults
   {:pre-authorize? nil
    :post-authorize? nil
    :method :get
    :uri-fn (fn [query] (:uri query))
-   ;; :params {}
    :service #'http-request})
 
 (def ^:private service-query-defs
   [
    {:name :default-server
     :format :json
-    ;; :params {}
-    :uri-fn (fn [_] (str "/api/v2/default-server"))
+    ;; :uri-fn (fn [_] (str "/api/v2/default-server"))
+    :uri "/api/v2/default-server"
     }
    {:name :project
     :format :json-api
     :post-authorize? true
     :uri-fn (fn [query-request]
               (println "query-params::::" (:query query-request))
-              ;; (let [account-num "1037657"
-              ;;       server :prd]
-                ;; (str "/api/v2/projects?filter[account]=" account-num "&env[server]=" (utils/->str server))))
-                (str "/api/v2/projects/" (-> query-request :query :params :id))
-                ;; )
-              )
-    ;; {:uri (str "/api/v2/projects?filter[account]=" account-num "&env[server]=" (utils/->str server))
+              (str "/api/v2/projects/" (-> query-request :query :params :id)))
     }
    {:name :projects
     :format :json-api
-    ;; :pre-authorize? true
+    :pre-authorize? true
     :post-authorize? true
-    :uri-fn (fn [query-request]
-              ;; (println "query-params::::" (:query query-request))
-              ;; (let [account-num "1037657"
-              ;;       server :prd]
-                ;; (str "/api/v2/projects?filter[account]=" account-num "&env[server]=" (utils/->str server))))
-                (str "/api/v2/projects")
-                ;; )
-              )
+    :uri "/api/v2/projects"
+    ;; :uri-fn (fn [query-request]
+    ;;             (str "/api/v2/projects"))
     }
 
    {:name :project-spreadsheet-data
     :format :schema
     :post-authorize? true
-    :extract-account-nums (fn [m] (println "in extract") (pr m) (pr (keys m)) (vector (m "account-num")))
-    ;; :authorize-fn #(fn [& args]
-    ;;                       (println "in post-authorize" args)
-    ;;                  true)
+    :extract-account-nums (fn [m]
+                            (println "in extract")
+                            (pr (keys m))
+                            (if-let [acct-num (m "account-num")]
+                              (vector acct-num)))
+    :uri-fn (fn [query-request]
+              (println "query-params::::" (:query query-request) (-> query-request :query :params :id))
+              (str "/api/v2/project-spreadsheet-data/" (-> query-request :query :params :id)))
     }
+
    {:name :order
     :format :json-api
     :post-authorize? true
+    :uri-fn (fn [query-request]
+              (println "query-params::::" (:query query-request))
+              (str "/api/v2/orders/" (-> query-request :query :params :id)))
     }
    ])
 

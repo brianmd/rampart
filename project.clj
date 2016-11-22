@@ -37,6 +37,7 @@
                  [cheshire "5.6.3"]
                  [clj-http "2.2.0"]
                  [slingshot "0.12.2"]
+                 [dk.ative/docjure "1.11.0"]  ;; for excel
                  ;; [dire "0.5.4"]     ;; error logic decomplection
                  ]
 

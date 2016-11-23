@@ -30,8 +30,7 @@
   (let [
         base-url (-> env :rosetta-url)
         uri-fn (:uri-fn query)
-        url (str base-url (uri-fn query-request))
-        _ (println "url:" url)
+        url (str base-url (uri-fn query))
         method (:method query)
         params (:params query)
         http-params {:method method
@@ -44,16 +43,22 @@
                      ;; :query-params (:query-params request)
                      ;; :form-params (:form-params request)
                      }
-        _ (println "http-request http-params:" http-params)
         http-params (merge http-params @core/debug-options)
         ]
-    (let [
-        response (client/request http-params)
-        result (-> response :body json/parse-string)
-        ]
-      (assoc query-request
-             :response response
-             :result result))
+    (try
+      (let [
+            response (client/request http-params)
+            result (-> response :body json/parse-string)
+            ]
+        (assoc query-request
+               :response response
+               :result result))
+      (catch Exception e
+        (println "error in http-request, url: " url ", http-params:")
+        (prn http-params)
+        (println "\n    query-request:")
+        (prn query-request)
+        (throw e)))
     ))
 ;; (def hreq (http-request {:request {:request-method :get :uri "/api/v2/default-server"}}))
 ;; (keys hreq)
@@ -66,7 +71,7 @@
   {:pre-authorize? nil
    :post-authorize? nil
    :method :get
-   :uri-fn (fn [query] (:uri query))
+   :uri-fn (fn default-uri-fn [query-request] (:uri query-request))
    :service #'http-request})
 
 (def ^:private service-query-defs
@@ -80,7 +85,6 @@
     :format :json-api
     :post-authorize? true
     :uri-fn (fn [query-request]
-              (println "query-params::::" (:query query-request))
               (str "/api/v2/projects/" (-> query-request :query :params :id)))
     }
    {:name :projects

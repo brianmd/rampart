@@ -50,7 +50,7 @@
       response)))
 
 (defn- error-response [err err-num err-msg]
-  (println "caught error during http processing: " err-msg "(" err-num ")")
+  (println "\n\n.....................\n------------ caught error during http processing: " err-msg "(" err-num ")\n..................\n\n")
   (log/error (:throwable err) "caught error during http processing: " err-msg)
   {:status err-num :body {:errors [err-msg]}}
   )

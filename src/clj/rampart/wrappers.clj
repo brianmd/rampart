@@ -43,7 +43,7 @@
 
 (defn wrap-logger [handler]
   (fn [request]
-    (println "\n\n---------\nrequested url:" (:uri request)
+    (println "\n\n---------\nincoming request url:" (:uri request)
              " with params " (:params request))
     (let [response (handler request)]
       (println "wrapper response status :" (:status response))

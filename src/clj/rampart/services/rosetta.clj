@@ -78,7 +78,6 @@
   [
    {:name :default-server
     :format :json
-    ;; :uri-fn (fn [_] (str "/api/v2/default-server"))
     :uri "/api/v2/default-server"
     }
    {:name :project
@@ -92,8 +91,6 @@
     :pre-authorize? true
     :post-authorize? true
     :uri "/api/v2/projects"
-    ;; :uri-fn (fn [query-request]
-    ;;             (str "/api/v2/projects"))
     }
 
    {:name :project-spreadsheet-data

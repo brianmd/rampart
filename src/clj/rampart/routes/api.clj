@@ -140,10 +140,10 @@
           (println "do-auth " @do-auth? "<=" v)
           (reset! do-auth? (= v "true"))))
 
-      (GET "/accounts/:account-id/projects/:id" req
+      (GET "/accounts/:account/projects/:id" req
         (process (make-query-request :project :project req)))
 
-      (GET "/accounts/:account-id/projects" req
+      (GET "/accounts/:account/projects" req
         (process (make-query-request :project :projects req)))
 
       (GET "/project-spreadsheet/:id" req

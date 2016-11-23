@@ -30,7 +30,7 @@
   (let [
         base-url (-> env :rosetta-url)
         uri-fn (:uri-fn query)
-        url (str base-url (uri-fn query))
+        url (str base-url (uri-fn query-request))
         method (:method query)
         params (:params query)
         http-params {:method method
@@ -71,7 +71,7 @@
   {:pre-authorize? nil
    :post-authorize? nil
    :method :get
-   :uri-fn (fn default-uri-fn [query-request] (:uri query-request))
+   :uri-fn (fn default-uri-fn [query-request] (-> query-request :query :uri))
    :service #'http-request})
 
 (def ^:private service-query-defs
@@ -84,7 +84,12 @@
     :format :json-api
     :post-authorize? true
     :uri-fn (fn [query-request]
+              (println "\n\n..................\n")
+              (prn (-> query-request :query :params))
+              (prn (-> query-request :params))
+              (prn query-request)
               (str "/api/v2/projects/" (-> query-request :query :params :id)))
+              ;; (str "/api/v2/projects/" (-> query-request :params :id)))
     }
    {:name :projects
     :format :json-api

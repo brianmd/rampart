@@ -149,8 +149,6 @@
       (GET "/project-spreadsheet/:id" req
            (let [data (process (make-query-request :project :project-spreadsheet-data req))
                  result (:result data)
-                 _ (println "data keys")
-                 _ (prn (keys result))
                  filepath (spreadsheet/create-temp-spreadsheet "amps" "xlsx" (result "headers") (result "data"))
                  filename (last (str/split filepath #"/"))]
              (println "filename::" filename)

@@ -56,8 +56,8 @@
       (catch Exception e
         (println "error in http-request, url: " url ", http-params:")
         (prn http-params)
-        (println "\n    query-request:")
-        (prn query-request)
+        ;; (println "\n    query-request:")
+        ;; (prn query-request)
         (throw e)))
     ))
 ;; (def hreq (http-request {:request {:request-method :get :uri "/api/v2/default-server"}}))
@@ -84,12 +84,7 @@
     :format :json-api
     :post-authorize? true
     :uri-fn (fn [query-request]
-              (println "\n\n..................\n")
-              (prn (-> query-request :query :params))
-              (prn (-> query-request :params))
-              (prn query-request)
               (str "/api/v2/projects/" (-> query-request :query :params :id)))
-              ;; (str "/api/v2/projects/" (-> query-request :params :id)))
     }
    {:name :projects
     :format :json-api
@@ -103,11 +98,10 @@
     :post-authorize? true
     :extract-account-nums (fn [m]
                             (println "in extract")
-                            (pr (keys m))
+                            ;; (pr (keys m))
                             (if-let [acct-num (m "account-num")]
                               (vector acct-num)))
     :uri-fn (fn [query-request]
-              (println "query-params::::" (:query query-request) (-> query-request :query :params :id))
               (str "/api/v2/project-spreadsheet-data/" (-> query-request :query :params :id)))
     }
 
@@ -115,7 +109,6 @@
     :format :json-api
     :post-authorize? true
     :uri-fn (fn [query-request]
-              (println "query-params::::" (:query query-request))
               (str "/api/v2/orders/" (-> query-request :query :params :id)))
     }
    ])

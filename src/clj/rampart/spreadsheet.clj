@@ -19,7 +19,7 @@
   [prefix wb-name colnames data]
   (let [filename (temp-filename prefix "xlsx")
         data (concat [(map u/->str colnames)] data)
-        _ (println data)
+        ;; _ (println data)
         wb (xls/create-workbook wb-name
                                 data)]
     (xls/save-workbook! filename wb)

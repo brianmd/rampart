@@ -97,6 +97,7 @@
     (let [cust-id (-> query-request :query :customer-id)
           subsystem (-> query-request :query :subsystem)]
       (println "post-auth-fn account-nums:" account-nums ", cust-id: " cust-id)
+      (prn [account-nums cust-id])
       (when (empty? account-nums)
         (println (str "no account numbers returned. result keys: " (-> query-request :result keys)))
         (throw+ {:type :not-found :message "no account return (post-auth)"}))

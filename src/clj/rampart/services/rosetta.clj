@@ -1,3 +1,9 @@
+;; (System/getenv "abc")
+;; (defn lookup- [])
+
+;; (utils/->str :abc)
+
+
 (ns rampart.services.rosetta
   (:require [clojure.string :as str]
 
@@ -12,7 +18,8 @@
 
             [rampart.services.core :as core]
 
-            [summit.utils.core :as utils]))
+            [summit.utils.core :as utils]
+            ))
 
 ;; (def ^:private rosetta-conn-pool
 ;;   (conn-mgr/make-reusable-conn-manager {:timeout 360 :threads 10}))

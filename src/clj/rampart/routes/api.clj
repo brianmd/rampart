@@ -16,6 +16,7 @@
 
             [summit.utils.core :as utils]
             [rampart.services.rosetta :refer [http-request]]
+            [rampart.services.proxy :refer [proxy]]
             [rampart.spreadsheet :as spreadsheet]
 
             [clojure.string :as str]))
@@ -169,4 +170,16 @@
 
       (GET "/orders/:id" req
         (process (make-query-request :order :order req)))
-      )))
+
+      (GET "/*" req
+           (ok-json
+            (utils/req-sans-unprintable req)
+            ;; {:at-root true}
+            ))
+      ))
+  (GET "/*" req
+       (proxy req)
+       ;; (ok-json
+       ;;  (utils/req-sans-unprintable req))
+       )
+  )

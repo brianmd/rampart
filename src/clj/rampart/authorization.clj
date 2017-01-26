@@ -10,7 +10,10 @@
             [clj-http.client :as client]
             [rampart.config :refer [env]]
 
-            [clojure.set :as set]))
+            [clojure.set :as set]
+
+            [summit.utils.core :as utils]
+            ))
 
 (defn decipher-webtoken [secret token]
   (jwt/unsign token secret))
@@ -118,7 +121,7 @@
 ;; (customer-account-subsystems 42 1023292)
 
 (defn authorized? [customer-id account-num subsystem]
-  (contains? (customer-account-subsystems customer-id account-num) subsystem))
+  (contains? (customer-account-subsystems customer-id (utils/->int account-num)) subsystem))
 ;; (authorized? 28 1000736 :project)  ;; true
 ;; (authorized? 28 1000736 :projectttt)  ;; false
 ;; (authorized? 28 nil :project)  ;; true

@@ -39,6 +39,8 @@
                  [slingshot "0.12.2"]
                  [dk.ative/docjure "1.11.0"]  ;; for excel
                  ;; [dire "0.5.4"]     ;; error logic decomplection
+
+                 [datascript "0.15.5"]
                  ]
 
   :min-lein-version "2.0.0"

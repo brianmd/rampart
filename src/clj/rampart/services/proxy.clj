@@ -2,12 +2,15 @@
   (:require [clojure.string :as str]
 
             [mount.core :as mount]
-            [rampart.db.core :as db]
 
             [buddy.sign.jwt :as jwt]
             [cheshire.core :as json :refer [generate-string parse-string]]
             [clj-http.client :as client]
             [clj-http.conn-mgr :as conn-mgr]
+            [clojure.string :as string]
+            [datascript.core :as d]
+
+            [rampart.db.core :as db]
             [rampart.config :refer [env]]
 
             [rampart.services.core :as core]
@@ -15,6 +18,59 @@
             [summit.utils.core :as utils]
             ))
 
+(def schema
+  {:proxy/service-instance {:db/valueType :db.type/ref}
+   :proxy/instance-name {:db/unique :db.unique/identity}
+   :proxy/from-uri {:db/cardinality :db.cardinality/many}})
+
+(def db (d/create-conn schema))
+
+(def default-services
+  [
+   {:db/id -1
+    :service/instance-name :blue-harvest.dev
+    :service/service :blue-harvest
+    :service/env :prod
+    :service/uri "http://marketing-02.insummit.com:7442"}
+   {:db/id -2
+    :service/instance-name :blue-harvest.prod
+    :service/service :blue-harvest
+    :service/env :dev
+    :service/uri "http://marketing-22.insummit.com:7442"}
+   {:db/id -3
+    :service/instance-name :project.brian
+    :service/service :projects.10.9.0.124
+    :service/env :brian
+    :service/uri-prefix "http://10.9.0.124:3000"}
+   ])
+
+(d/transact! db default-services)
+
+(d/q '[:find ?e ?name
+       :where [?e :service/instance-name ?name]]
+     @db)
+
+(def default-redirects
+  {:ipaddr :default
+   :proxy/routes
+   [{:proxy/from-uri ["/api/v2/releases" "/api/v2/release-line-items"]
+     :service/instance-name :project.brian
+     :proxy/to-uri "http://10.9.0.124:3000/api/v2/release"
+     }
+    {:proxy/from-uri ["/api/v2/projects" "/api/v2/project-line-items"]
+     :proxy/to-uri "http://mark-docker01.insummit.com:3000/api/v2/release"}
+    {:proxy/from-uri ["/api/v2"]
+     }
+    ]})
+
+(defn find-redirect
+  [uri ipaddr]
+  (let [tokens (string/split uri #"\/")]
+    tokens)
+  )
+(find-redirect "/api/v2/release" "10.9.0.124")
+(find-redirect "/api/v2/release" :default)
+(string/join "/" (find-redirect "/api/v2/release" "10.9.0.124"))
 
 (defn proxy
   [req]

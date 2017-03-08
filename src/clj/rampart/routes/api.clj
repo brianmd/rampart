@@ -1,6 +1,6 @@
 (ns rampart.routes.api
   (:require [rampart.layout :as layout]
-            [compojure.core :refer [defroutes GET context]]
+            [compojure.core :refer [defroutes GET POST PATCH DELETE context]]
             [ring.util.http-response :as response]
             [clojure.java.io :as io]
 
@@ -191,6 +191,18 @@
       (GET "/projects/:id/releases" req
            (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
       (GET "/releases*" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (POST "/projects/:id/releases" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (POST "/releases*" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (PATCH "/projects/:id/releases" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (PATCH "/releases*" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (DELETE "/projects/:id/releases" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (DELETE "/releases*" req
            (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
 
       (GET "/project-spreadsheet-data/:id" req

@@ -85,7 +85,7 @@
 ;;    (:filter req)))
 ;;    ;; (:filter (:params req))))
 
-(defn proxy-releases-request
+(defn proxy-request
   [req to-base-uri]
   (println "\n\nproxy-releases-request: " (:uri req))
   (let [response
@@ -93,7 +93,7 @@
                                 ;; "http://mark-docker01.insummit.com:3005/"
                                 req)]
     {:body (slurp (:body response))
-     :status 200
+     :status (:status response)
      :headers {"Content-Type" "text/json"}
      }
     ;; response
@@ -191,9 +191,9 @@
       (GET "/projects/:id/releases" req
            (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
       (GET "/releases*" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (POST "/projects/:id/releases" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (POST "/releases*" req
            (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
       (PATCH "/projects/:id/releases" req

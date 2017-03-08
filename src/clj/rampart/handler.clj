@@ -20,7 +20,7 @@
     (->
         ;; #'home-routes
         #'api-routes-v2
-        (wrap-routes middleware/wrap-csrf)
+        ;; (wrap-routes middleware/wrap-crf)
         (wrap-routes middleware/wrap-formats)
         (wrap-routes ramwrap/wrap-error)
         (wrap-routes ramwrap/wrap-logger)

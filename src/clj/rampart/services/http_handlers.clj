@@ -69,3 +69,20 @@
 ;;   (clojure.pprint/pprint response)
 ;;   (println "\n\nbody:")
 ;;   (println (slurp (:body response))))
+
+;; (let [response (proxy-request "/" "https://www.summit.com/" ; "https://www.google.com/"
+;;                               {:uri "/api/v2/projects/3/releases"
+;;                                :request-method :get
+;;                                :query-string ""})]
+;;   (clojure.pprint/pprint response)
+;;   (println "\n\nbody:")
+;;   (println (slurp (:body response))))
+
+;; (let [response (proxy-request "/" "https://www.summit.com/" ; "https://www.google.com/"
+;;                               {:uri "/api/v2/projects/3/releases"
+;;                                :body {:name "test 1"}
+;;                                :request-method :post
+;;                                :query-string ""})]
+;;   (clojure.pprint/pprint response)
+;;   (println "\n\nbody:")
+;;   (println (slurp (:body response))))

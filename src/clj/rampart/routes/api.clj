@@ -189,21 +189,21 @@
               }))
 
       (GET "/projects/:id/releases" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (GET "/releases*" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (POST "/projects/:id/releases" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (POST "/releases*" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (PATCH "/projects/:id/releases" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (PATCH "/releases*" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (DELETE "/projects/:id/releases" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (DELETE "/releases*" req
-           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+           (proxy-request req "http://mark-docker01.insummit.com:3005/"))
 
       (GET "/project-spreadsheet-data/:id" req
         (process (make-query-request :project :project-spreadsheet-data req)))

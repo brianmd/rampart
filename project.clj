@@ -3,12 +3,16 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
-  :dependencies [[cljs-ajax "0.5.8"]
+  :dependencies [
+                 ;; [incanter "1.5.7" :exclusions [bouncycastle/bcprov-jdk14 bouncycastle/bcpkix-jdk14]]
+                 ;; [com.murphydye/mishmash "0.1.2-SNAPSHOT"]
+                 [cljs-ajax "0.5.8"]
                  [secretary "1.2.3"]
                  [reagent-utils "0.2.0"]
                  [reagent "0.6.0-rc"]
                  [org.clojure/clojurescript "1.9.229" :scope "provided"]
                  [org.clojure/clojure "1.8.0"]
+                 ;; [org.clojure/clojure "1.9.0-alpha14"]
                  [selmer "1.0.7"]
                  [markdown-clj "0.9.89"]
                  [ring-middleware-format "0.7.0"]

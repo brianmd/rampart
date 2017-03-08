@@ -1,9 +1,3 @@
-;; (System/getenv "abc")
-;; (defn lookup- [])
-
-;; (utils/->str :abc)
-
-
 (ns rampart.services.rosetta
   (:require [clojure.string :as str]
 

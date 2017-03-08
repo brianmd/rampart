@@ -4,6 +4,7 @@
             [ring.util.http-response :as response]
             [clojure.java.io :as io]
 
+            [clojure.string :as str]
             [cheshire.core :as cheshire]
             [ring.handler.dump :as dump]
 
@@ -16,10 +17,12 @@
 
             [summit.utils.core :as utils]
             [rampart.services.rosetta :refer [http-request]]
-            [rampart.services.proxy :refer [proxy]]
+            ;; [rampart.services.proxy :refer [proxy]]
             [rampart.spreadsheet :as spreadsheet]
 
-            [clojure.string :as str]))
+            ;; [mishmash.http-handlers :as handlers]
+            [rampart.services.http-handlers :as handlers]
+            ))
 
 ;; :extract-account-nums (fn [m] (println "in extract") (pr (keys m)) (vector (:account-num m)))
 
@@ -82,6 +85,19 @@
 ;;    (:filter req)))
 ;;    ;; (:filter (:params req))))
 
+(defn proxy-releases-request
+  [req to-base-uri]
+  (println "\n\nproxy-releases-request: " (:uri req))
+  (let [response
+        (handlers/proxy-request "/" to-base-uri
+                                ;; "http://mark-docker01.insummit.com:3005/"
+                                req)]
+    {:body (slurp (:body response))
+     :status 200
+     :headers {"Content-Type" "text/json"}
+     }
+    ;; response
+    ))
 
 (defroutes api-routes-v2
   (GET "/error/:bool" req
@@ -90,6 +106,19 @@
       {:body {:set-wrap-errors bool}}))
   (GET "/error*" req (/ 1 0)) ;; force error to show debugger in browser
   (GET "/dump*" req (println "\n\n\n-------------\n\n\n") (dump-page req))
+  (GET "/google" req
+       (let [response
+             (handlers/proxy-request "/google" "https://www.google.com/"
+                                     req)]
+                                     ;; {:uri "/"
+                                     ;;  :request-method :get
+                                     ;;  :query-string ""})]
+         ;; {:body (:body response)}
+         {:body {:body (slurp (:body response))}
+          :status 200
+          :headers {"Content-Type" "text/json"}
+          }
+         ))
   (GET "/customers/:cust-id/subsystems" req
     (let [params (:params req)
           cust-id (utils/->long (:cust-id params))
@@ -159,11 +188,19 @@
               :body (io/file filepath)
               }))
 
+      (GET "/projects/:id/releases" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+      (GET "/releases*" req
+           (proxy-releases-request req "http://mark-docker01.insummit.com:3005/"))
+
       (GET "/project-spreadsheet-data/:id" req
         (process (make-query-request :project :project-spreadsheet-data req)))
 
       (GET "/projects/:id" req
         (process (make-query-request :project :project req)))
+
+      (GET "/project-line-items/:id" req
+           (process (make-query-request :project :projects req)))
 
       (GET "/projects" req
         (process (make-query-request :project :projects req)))
@@ -177,9 +214,9 @@
             ;; {:at-root true}
             ))
       ))
-  (GET "/*" req
-       (proxy req)
-       ;; (ok-json
-       ;;  (utils/req-sans-unprintable req))
-       )
+  ;; (GET "/*" req
+  ;;      (proxy req)
+  ;;      ;; (ok-json
+  ;;      ;;  (utils/req-sans-unprintable req))
+  ;;      )
   )

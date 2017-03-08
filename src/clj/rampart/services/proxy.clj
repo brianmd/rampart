@@ -1,4 +1,4 @@
-(ns rampart.services.proxy
+(ns rampart.services.proxy-datascript
   (:require [clojure.string :as str]
 
             [mount.core :as mount]
@@ -19,9 +19,10 @@
             ))
 
 (def schema
-  {:proxy/service-instance {:db/valueType :db.type/ref}
-   :proxy/instance-name {:db/unique :db.unique/identity}
-   :proxy/from-uri {:db/cardinality :db.cardinality/many}})
+  ;; {:service/service-instance {:db/valueType :db.type/ref}
+  {:service/service-instance {:db/type :db.type/ref}
+   :service/instance-name {:db/unique :db.unique/identity}
+   :service/from-uri {:db/cardinality :db.cardinality/many}})
 
 (def db (d/create-conn schema))
 
@@ -49,28 +50,63 @@
 (d/q '[:find ?e ?name
        :where [?e :service/instance-name ?name]]
      @db)
+(d/q '[:find [?e ...]
+       :where [?e :service/instance-name :project.brian]]
+     @db)
+(d/entity @db [:service/instance-name :project.brian])
 
 (def default-redirects
-  {:ipaddr :default
-   :proxy/routes
-   [{:proxy/from-uri ["/api/v2/releases" "/api/v2/release-line-items"]
-     :service/instance-name :project.brian
-     :proxy/to-uri "http://10.9.0.124:3000/api/v2/release"
-     }
-    {:proxy/from-uri ["/api/v2/projects" "/api/v2/project-line-items"]
-     :proxy/to-uri "http://mark-docker01.insummit.com:3000/api/v2/release"}
-    {:proxy/from-uri ["/api/v2"]
-     }
-    ]})
+  [{;; :db/id -1
+    :proxy/from-uri ["/api/v2/releases" "/api/v2/release-line-items"]
+    :proxy/name :testing
+    :service/service-instance [:service/instance-name :project.brian]
+    }
+   ;; {:db/id -2
+   ;;  :proxy/from-uri ["/api/v2/projects" "/api/v2/project-line-items"]
+   ;;  :proxy/to-uri "http://mark-docker01.insummit.com:3000/api/v2/release"}
+   ;; {:db/id -3
+   ;;  :proxy/from-uri ["/api/v2"]
+   ;;  }
+   ])
+  ;; {:ipaddr :default
+  ;;  :proxy/routes
+  ;;  [{;; :db/id -1
+  ;;    ;; :proxy/from-uri ["/api/v2/releases" "/api/v2/release-line-items"]
+  ;;    :proxy/from-urii "abi"
+  ;;    :service/service-instance [:service/instance-name :project.brian]
+  ;;    }
+  ;;   ;; {:db/id -2
+  ;;   ;;  :proxy/from-uri ["/api/v2/projects" "/api/v2/project-line-items"]
+  ;;   ;;  :proxy/to-uri "http://mark-docker01.insummit.com:3000/api/v2/release"}
+  ;;   ;; {:db/id -3
+  ;;   ;;  :proxy/from-uri ["/api/v2"]
+  ;;   ;;  }
+  ;;   ]
+  ;;  })
+
+(d/transact! db default-redirects)
+
+(d/q '[:find ?e
+       :where [?e :proxy/name :testing]]
+     @db)
+
+(d/q '[:find ?prefix
+       :where [?e :proxy/name :testing]
+       ;; [?e :proxy/from-uri "/api/v2/releases"]
+              [?e :service/service-instance ?service]
+              [?service :service/uri-prefix ?prefix]
+              ]
+     @db)
+
 
 (defn find-redirect
   [uri ipaddr]
   (let [tokens (string/split uri #"\/")]
     tokens)
   )
-(find-redirect "/api/v2/release" "10.9.0.124")
-(find-redirect "/api/v2/release" :default)
-(string/join "/" (find-redirect "/api/v2/release" "10.9.0.124"))
+;; (find-redirect "/api/v2/release" "10.9.0.124")
+;; (find-redirect "/api/v2/release" :default)
+;; (string/join "/" (find-redirect "/api/v2/release" "10.9.0.124"))
 
 (defn proxy
   [req]

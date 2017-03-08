@@ -92,7 +92,8 @@
         (handlers/proxy-request "/" to-base-uri
                                 ;; "http://mark-docker01.insummit.com:3005/"
                                 req)]
-    {:body (slurp (:body response))
+    (println "\nbody response type:" (type (:body response)))
+    {:body (if (:body response) (slurp (:body response)) {})
      :status (:status response)
      :headers {"Content-Type" "text/json"}
      }
@@ -194,15 +195,15 @@
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (POST "/projects/:id/releases" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
-      (POST "/releases*" req
+      (POST "/release*" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (PATCH "/projects/:id/releases" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
-      (PATCH "/releases*" req
+      (PATCH "/release*" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
       (DELETE "/projects/:id/releases" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
-      (DELETE "/releases*" req
+      (DELETE "/release*" req
            (proxy-request req "http://mark-docker01.insummit.com:3005/"))
 
       (GET "/project-spreadsheet-data/:id" req
